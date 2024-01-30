@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Website{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+
+        {#body {#}
+        {#    background-color: whitesmoke;#}
+        {#}#}
+        {##}
+        {#.navbar {#}
+        {#    background-image: {% static 'assets/img/money.jpg' %};#}
+        {#}#}
+
+        .navbar-brand img {
+            max-height: 100px;
+            margin-right: 10px; 
+        }
+
+        .form {
+            border: 5px solid #006eff;
+            padding: 90px;
+            border-radius: 10px;
+            background: linear-gradient(0deg, #ff6a00 0%, #8c00ff 100%);
+            color: whitesmoke;
+            border-color: #ff6a00;
+        }
+        .container-fluid {
+            background: darkgrey;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <img src="{% static 'assets/img/wallet.jpg' %}" alt="Logo">
+            My Wallet
+        </a>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="powitanie">
+            <p>Witaj ponownie! Zaloguj się, aby uzyskać dostęp do swojego konta w My Wallet.</p>
+            <p>Zarządzaj swoimi finansami, śledź wpływy i wydatki oraz osiągaj swoje cele finansowe.</p> 
+            <p>Jeśli potrzebujesz pomocy, skontaktuj się z naszym Centrum Obsługi Klienta pod adresem support@mywallet.com lub pod numerem telefonu +48 123 456 789.</p>
+        </div>
+        <div class="col-md-6">
+            <div class="form"> 
+                {% block content %}
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" class="btn btn-primary">Wyślij</button>
+                        </form>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+
+
+
+<div class="powitanie">
+            <p>Witaj w My Wallet - Twoim osobistym asystencie finansowym!</p>
+            <p>Zarejestruj się już teraz, aby zacząć korzystać z funkcji, które pomogą Ci lepiej zarządzać swoimi finansami. My Wallet umożliwia śledzenie dochodów i wydatków, planowanie oszczędności, oraz osiąganie finansowych celów..</p> 
+            <p>Korzyści z rejestracji:</p>
+            <p>- Personalizowane konto finansowe</p>
+            <p>- Łatwe śledzenie wpływów i wydatków</p>
+            <p>- Ustawianie celów oszczędnościowych</p>
+            <p>- Dostęp do inteligentnych narzędzi zarządzania finansami</p>
+        </div>

@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Twoje pieniądze w jednym miejscu </title>
+        <link rel="icon" type="image/x-icon" href="{% static 'assets/favicon.ico' %}" />
+        <!-- Font Awesome icons (free version)-->
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+        <!-- Google fonts-->
+        <link href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,700,700i,900,900i" rel="stylesheet" />
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+    </head>
+    <body id="page-top">
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
+            <div class="container px-5">
+                <a class="nav-link" href="#contact">Kontakt</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Zaloguj się</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Zarejestruj się</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- Header-->
+        <header class="masthead text-center text-white">
+            <div class="masthead-content">
+                <div class="container px-5">
+                    <h1 class="masthead-heading mb-0">Mój Portfel </h1>
+                    <h2 class="masthead-subheading mb-0">oferuje kompleksowe rozwiązania dla wszystkich, którzy pragną lepiej zarządzać swoimi finansami i osiągać swoje cele finansowe.</h2>
+                    <a class="btn btn-primary btn-xl rounded-pill mt-5" href="#scroll">Dowiedz się więcej</a>
+                </div>
+            </div>
+            <div class="bg-circle-1 bg-circle"></div>
+            <div class="bg-circle-2 bg-circle"></div>
+            <div class="bg-circle-3 bg-circle"></div>
+            <div class="bg-circle-4 bg-circle"></div>
+        </header>
+        <!-- Content section 1-->
+        <section id="scroll">
+            <div class="container px-5">
+                <div class="row gx-5 align-items-center">
+                    <div class="col-lg-6 order-lg-2">
+                        <div class="p-5"><img class="img-fluid rounded-circle" src="{% static 'assets/img/zarz.jpg' %}" alt="..." /></div>
+                    </div>
+                    <div class="col-lg-6 order-lg-1">
+                        <div class="p-5">
+                            <h2 class="display-4">Dla pomocy w zarządzaniu pieniędzmi</h2>
+                            <p>Czy zastanawiałeś się kiedyś, jak skutecznie zarządzać swoimi finansami i unikać zbędnych wydatków ? Aplikacja "Mój Portfel" została stworzona właśnie po to, aby uczynić te zadania łatwiejszymi i bardziej dostępnymi dla każdego.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Content section 2-->
+        <section>
+            <div class="container px-5">
+                <div class="row gx-5 align-items-center">
+                    <div class="col-lg-6">
+                        <div class="p-5"><img class="img-fluid rounded-circle" src="{% static 'assets/img/oszcz.jpg' %}" alt="..." /></div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="p-5">
+                            <h2 class="display-4">Dla lepszego oszczędzania</h2>
+                            <p>Aplikacja umożliwia użytkownikom ustawianie konkretnych celów oszczędnościowych na różne potrzeby, takie jak podróż marzeń, nowy sprzęt czy też awaryjny fundusz. Monitorowanie postępów w realizacji tych celów dostarcza dodatkowej motywacji do systematycznego oszczędzania.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Content section 3-->
+        <section>
+            <div class="container px-5">
+                <div class="row gx-5 align-items-center">
+                    <div class="col-lg-6 order-lg-2">
+                        <div class="p-5"><img class="img-fluid rounded-circle" src="{% static 'assets/img/zap.jpg' %}" alt="..." /></div>
+                    </div>
+                    <div class="col-lg-6 order-lg-1">
+                        <div class="p-5">
+                            <h2 class="display-4">Dla zapominalskich</h2>
+                            <p>Zapominałeś kiedyś o rachunkach do zapłacenia lub planowanych wydatkach ? Aplikacja  jest stworzona z myślą o osobach zapominalskich, oferując inteligentne funkcje, które pomagają utrzymać porządek w finansach nawet dla tych, którzy zwykle zapominają.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="last-info-section padding-small" id="contact">
+            <div class="kontakt">
+                <div class="row">
+                    <div class="col">
+                        <h3 class="mb-4">Skontaktuj się z nami!</h3>
+                        <p>Pracownicy Centrum Obsługi Klienta chętnie udzielą odpowiedzi na Twoje pytania!</p>
+                    </div>
+                    <div class="col pl-4 ml-4">
+                        <h3 class="mb-4">Formy kontaktu</h3>
+                            Jesteśmy dostępni od poniedziałku do piątku. Pracujemy w godzinach 9:00-17:00
+                        <ul class="container">
+                            <li>E-mail: support@mywallet.com</li>
+                            <li>Numer telefonu: +48 123 456 789</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <style>
+        .kontakt {
+            background-color: #006eff;
+            color: white;
+            padding: 50px;
+        }
+        
+        .kontakt ul li {
+            margin-bottom: 10px;
+        }
+        .nav-link {
+            color: white;
+            
+        }
+        </style>
+    </body>
+</html>

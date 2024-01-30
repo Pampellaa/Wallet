@@ -1,0 +1,37 @@
+{% extends 'dash.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <a href="{% url 'expense_add' %}" class="btn btn-success">Dodaj wydatek</a>
+            </div>
+            <div class="col-md-6">
+                <h4 class="float-md-right">Filtruj wydatki użytkownika w zależności od daty:</h4>
+                <form method="post" action="{% url 'expense' %}" class="form-inline float-md-right mt-2 mt-md-0">
+                    {% csrf_token %}
+                    {{ form }}
+                    <button type="submit" class="btn btn-primary">Filtruj</button>
+                </form>
+            </div>
+        </div>
+
+        {% if expenses %}
+            <div class="mt-4">
+                <h3>Wydatki:</h3>
+                <ul class="list-group">
+                    {% for expense in expenses %}
+                        <li class="list-group-item">
+                            {{ expense.amount }} zł - {{ expense.date }} - {{ expense.category.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+                <p class="mt-3">Total expense: <strong>{{ total_expense }} zł</strong></p>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <p>Brak wydatków.</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
