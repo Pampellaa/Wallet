@@ -1,0 +1,26 @@
+{% extends 'dash.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Kursy wymiany walut</h2>
+        
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Kod</th>
+                    <th>Nazwa</th>
+                    <th>Kurs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for currency in currencies %}
+                <tr>
+                    <td>{{ currency.code }}</td>
+                    <td>{{ currency.name }}</td>
+                    <td>{{ currency.exchange_rate }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

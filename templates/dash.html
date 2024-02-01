@@ -1,110 +1,156 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <title>My Wallet</title>
-        <link rel="icon" type="image/x-icon" href="" />
-        <link href="{% static 'css/styles2.css' %}" rel="stylesheet" />
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    </head>
-    <body>
-        <div class="d-flex" id="wrapper">
-            <div class="border-end bg-white" id="sidebar-wrapper">
-                <div class="sidebar-heading border-bottom bg-light">Witaj {{ user.username }}</div>
-                <div class="list-group list-group-flush">
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'income' %}">Moje wpływy</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'expense' %}">Moje wydatki</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'category' %}">Kategorie</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Waluty obce</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'savings' %}">Cele oszczędnościowe</a>
-                </div>
-            </div>
-            <!-- Page content wrapper-->
-            <div id="page-content-wrapper">
-                <!-- Top navigation-->
-                <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-                    <div class="container-fluid">
-                        <a href="{% url 'dashboard' %}" class="btn btn-primary">Strona główna</a>
-                        <a href="{% url 'logout' %}" class="btn btn-primary">Wyloguj się</a>
-                    </div>
-                </nav>
-                <!-- Page content-->
-                <div class="container-fluid">
-                    {% block content %}
-                         <div class="row mt-3">
-                            <!-- dochody a wydatki -->
-                            <div class="col-md-4">
-                                <h3>Podsumowanie z ostatnich 30 dni: </h3>
-                                <div class="graph-cont">
-                                     <canvas id="myChart"></canvas>
-                                </div>
-                                <h3>Razem: {{ together }}</h3>
-                            </div>
-                         </div>    
-                             
-                            <!-- Account Types -->
-                        <div class="row mt-3">
-                            <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Rodzaje Kont</h5>
-                                            <ul>
-                                                <li>Portfel:</li>
-                                                <li>Konto bankowe:</li>
-                                            </ul>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Ostatnie Transakcje</h5>
-                                    <ul>
-                                    {% for transaction in lastest %}
-                                        <li>
-                                            {% if transaction.transaction_type == 'Expense' %}
-                                                <span style="color: orangered;">{{ transaction.amount }} - Expense</span>
-                                            {% elif transaction.transaction_type == 'Income' %}
-                                                <span style="color: blueviolet;">{{ transaction.amount }} - Income</span>
-                                            {% endif %}
-                                        </li>
-                                    {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                    {% endblock %}
-                </div>
-            </div>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <title>My Wallet</title>
+    <link rel="icon" type="image/x-icon" href=""/>
+    <link href="{% static 'css/styles2.css' %}" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="d-flex" id="wrapper">
+    <div class="border-end bg-white" id="sidebar-wrapper">
+        <div class="sidebar-heading border-bottom bg-light">Witaj {{ user.username }}</div>
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'income' %}">Moje
+                wpływy</a>
+            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'expense' %}">Moje
+                wydatki</a>
+            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'accounts' %}">Konta
+                walut obcych</a>
+            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'category' %}">Kategorie</a>
+            <a class="list-group-item list-group-item-action list-group-item-light p-3"
+               href="{% url 'foreign_currencies' %}">Waluty obce</a>
+            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'savings' %}">Cele
+                oszczędnościowe</a>
         </div>
-            
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var ctx = document.getElementById('myChart').getContext('2d');
-            var myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Dochody', 'Wydatki'],
-                    datasets: [{
-                        data: [{{ sum_income }}, {{ sum_expenses }}],
-                        backgroundColor: ['#6f42c1', '#ff6a00'],
-                    }]
-                }, 
-                options: 
-                    {cutout: '75%',
-                }
-            });
+    </div>
+
+    <!-- Page content wrapper-->
+    <div id="page-content-wrapper">
+        <!-- Top navigation-->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <div class="container-fluid">
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">Strona główna</a>
+                <a href="{% url 'logout' %}" class="btn btn-primary">Wyloguj się</a>
+            </div>
+        </nav>
+        {% block content %}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>Podsumowanie z ostatnich 30 dni: </h3>
+                            <div class="graph-cont">
+                                <canvas id="myChart"></canvas>
+                            </div>
+                            <h3>Razem: {{ together }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>Rodzaje Kont</h3>
+                            <ul>
+                                {% for acc in account %}
+                                    <li>{{ acc.name }} - {{ acc.balance }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <ul>
+                            <h5>Ostatnie operacje na kontach :</h5>
+                            {% for transaction in transactionsFOR %}
+                                {% if transaction.transaction_type == 'Exchange' %}
+                                    <li>
+                                        <span>{{ transaction.amount }} {{ transaction.currency }} - Wymiana</span>
+                                        <span>{{ transaction.date }}</span>
+                                    </li>
+                                {% endif %}
+
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>Transakcje PLN z ostatnich 30 dni: </h3>
+                            <ul>
+                                {% for transaction in transactionsPLN %}
+                                    <li>
+                                        {% if transaction.transaction_type == 'Expense' %}
+                                            <span style="color: orangered;">{{ transaction.amount }} {{ transaction.currency }} - Wydatek</span>
+                                        {% elif transaction.transaction_type == 'Income' %}
+                                            <span style="color: blueviolet;">{{ transaction.amount }} {{ transaction.currency }} - Wpływ</span>
+                                        {% endif %}
+                                        <span>{{ transaction.date }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>Transakcje obce z ostatnich 30 dni: </h3>
+                            <ul>
+                                {% for transaction in transactionsFOR %}
+                                    {% if transaction.transaction_type == 'Expense' %}
+                                        <li>
+                                            <span style="color: orangered;">{{ transaction.amount }} {{ transaction.currency }} - Wydatek</span>
+                                            <span>{{ transaction.date }}</span>
+                                        </li>
+                                    {% endif %}
+                                    {% if transaction.transaction_type == 'Income' %}
+                                        <li>
+                                            <span style="color: blueviolet;">{{ transaction.amount }} {{ transaction.currency }} - Wpływ</span>
+                                            <span>{{ transaction.date }}</span>
+                                        </li>
+                                    {% endif %}
+                                    </ul>
+
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        {% endblock %}
+</div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Dochody', 'Wydatki'],
+                datasets: [{
+                    data: [{{ sum_income }}, {{ sum_expenses }}],
+                    backgroundColor: ['#6f42c1', '#ff6a00'],
+                }]
+            },
+            options: {
+                cutout: '75%',
+            }
         });
-    </script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="{% static 'js/scripts2.js' %}"></script>
-    </body>
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/scripts2.js' %}"></script>
+</body>
 </html>

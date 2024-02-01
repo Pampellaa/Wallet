@@ -1,0 +1,17 @@
+{% extends 'dash.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Twoje konta:</h2>
+        <ul class="list-group">
+            {% for account in accounts %}
+                <a href='{% url 'account_details' account.id %}' class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ account.name }}</span>
+                    <span>{{ account.balance }} {{ account.currency.symbol }}</span>
+                </a>
+            {% endfor %}
+        </ul>
+
+        <a href="{% url 'account_add' %}" class="btn btn-success mt-3">Dodaj konto</a>
+    </div>
+{% endblock %}

@@ -2,17 +2,19 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
-from wallet.models import Category, Income, Expense, Savings
+from wallet.models import Category, Income, Expense, Savings, Account
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(max_length=64, label='', widget=forms.TextInput(attrs={'placeholder': 'Nazwa użytkownika'}))
-    password = forms.CharField(max_length=64, label='',widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
+    username = forms.CharField(max_length=64, label='',
+                               widget=forms.TextInput(attrs={'placeholder': 'Nazwa użytkownika'}))
+    password = forms.CharField(max_length=64, label='', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
 
 
 class RegisterForm(forms.ModelForm):
-    username = forms.CharField(max_length=64, label='', widget=forms.TextInput(attrs={'placeholder': 'Nazwa użytkownika'}))
-    password = forms.CharField(max_length=64, label='',widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
+    username = forms.CharField(max_length=64, label='',
+                               widget=forms.TextInput(attrs={'placeholder': 'Nazwa użytkownika'}))
+    password = forms.CharField(max_length=64, label='', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
 
     class Meta:
         model = User
@@ -26,30 +28,35 @@ class RegisterForm(forms.ModelForm):
             raise ValidationError("Passwords don't match")
         return cleaned_data
 
+
 class DateFilterForm(forms.Form):
     date_from = forms.DateField(label='Data od', widget=forms.TextInput(attrs={'type': 'date'}))
     date_to = forms.DateField(label='Data do', widget=forms.TextInput(attrs={'type': 'date'}))
 
+
 class IncomeAddForm(forms.ModelForm):
     class Meta:
         model = Income
-        fields = '__all__'
+        fields = ['amount', 'date', 'description', 'category']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'})
         }
 
+
 class ExpenseAddForm(forms.ModelForm):
     class Meta:
         model = Expense
-        fields = '__all__'
+        fields = ['amount', 'date', 'description', 'category']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'})
         }
+
 
 class CategoryAddForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = '__all__'
+
 
 class SavingsAddForm(forms.ModelForm):
     class Meta:
@@ -66,3 +73,15 @@ class SavingsAddForm(forms.ModelForm):
     #         raise forms.ValidationError('Wprowadzona kwota przekracza pozostałą do osiągnięcia sumę.')
     #
     #     return goal_amount
+
+
+class AccountAddForm(forms.ModelForm):
+    class Meta:
+        model = Account
+        exclude = ['user']
+
+
+class ForIncomeAddForm(forms.Form):
+    amount = forms.DecimalField(max_digits=20, decimal_places=2)
+    date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+    category = forms.ModelChoiceField(queryset=Category.objects)

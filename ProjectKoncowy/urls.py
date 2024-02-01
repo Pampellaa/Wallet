@@ -17,7 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from wallet import views
-from wallet.views import AddMoneyToSavingsView, SavingsDeleteView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,7 +33,14 @@ urlpatterns = [
     path('category-add/', views.CategoryAddView.as_view(), name='category_add'),
     path('savings/', views.SavingsView.as_view(), name='savings'),
     path('savings-add/', views.SavingsAddView.as_view(), name='savings_add'),
-    path('add_money/<int:saving_id>/', AddMoneyToSavingsView.as_view(), name='add_money_to_savings'),
-    path('savings-delete/<int:saving_id>/', SavingsDeleteView.as_view(), name='savings_delete'),
+    path('add_money/<int:saving_id>/', views.AddMoneyToSavingsView.as_view(), name='add_money_to_savings'),
+    path('savings-delete/<int:saving_id>/', views.SavingsDeleteView.as_view(), name='savings_delete'),
+    path('foreign-currencies', views.ForeignCurrenciesView.as_view(), name='foreign_currencies'),
+    path('accounts/', views.AccountsView.as_view(), name='accounts'),
+    path('account-add/', views.AccountAddView.as_view(), name='account_add'),
+    path('account-details/<int:account_id>/', views.AccountDetailsView.as_view(), name='account_details'),
+    path('account-details/<int:account_id>/for-expense-add/', views.ForExpenseView.as_view(), name='for_expense_add'),
+    path('account-details/<int:account_id>/for-income-add/', views.ForIncomeView.as_view(), name='for_income_add'),
+    path('account-details/<int:account_id>/change_to_PLN/', views.change_to_PLNView.as_view(), name='change_to_PLN'),
 
 ]

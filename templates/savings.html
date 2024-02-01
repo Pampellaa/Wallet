@@ -3,6 +3,7 @@
 {% block content %}
     <div class="container mt-4">
         <h2>Twoje cele oszczędnościowe:</h2>
+    <a href="{% url 'savings_add' %}" class="btn btn-success mt-3"><i class="fas fa-plus"></i> Dodaj cel oszczędnościowy</a>
         <ul class="list-group">
             {% for saving in savings %}
                 <li class="list-group-item">
@@ -22,6 +23,9 @@
                                 </form>
                             {% endif %}
                         </div>
+                                                {% if invalid_saving_id == saving.id %}
+                                {{ error_message }}
+                            {% endif %}
                             <form class="d-flex" method="post" action="{% url 'add_money_to_savings' saving.id %}">
                             {% csrf_token %}
                             <div class="input-group">
@@ -30,14 +34,10 @@
                                     <button class="btn btn-primary" type="submit"><i class="fas fa-plus"></i> Dodaj</button>
                                 </div>
                             </div>
-                            {% if invalid_saving_id == saving.id %}
-                                {{ error_message }}
-                            {% endif %}
                         </form>
                     </div>
                 </li>
             {% endfor %}
         </ul>
-        <a href="{% url 'savings_add' %}" class="btn btn-success mt-3"><i class="fas fa-plus"></i> Dodaj cel oszczędnościowy</a>
     </div>
 {% endblock %}
