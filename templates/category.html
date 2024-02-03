@@ -1,11 +1,49 @@
 {% extends 'dash.html' %}
 
 {% block content %}
-    <ul>
-        <strong>Twoje kategorie:</strong>
-    {% for cat in categories %}
-        <li>{{ cat.name }}</li>
-    {% endfor %}  
-    </ul>
+    <table class="table">
+        <thead>
+            <tr>
+                <th><h3>Kategorie główne:</h3></th>
+                <th>Wydatki</th>
+                <th>Przychody</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in main_stats %}
+                <tr>
+                    <td>{{ stat.category.name }}</td>
+                    <td>{{ stat.total_expense }} {{ stat.category.currency.code }}</td>
+                    <td>{{ stat.total_income }} {{ stat.category.currency.code }}</td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th><h3>Moje kategorie:</h3></th>
+                <th>Wydatki</th>
+                <th>Przychody</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in user_stats %}
+                <tr>
+                    <td>{{ stat.category.name }}</td>
+                    <td>{{ stat.total_expense }} {{ stat.category.currency.code }}</td>
+                    <td>{{ stat.total_income }} {{ stat.category.currency.code }}</td>
+                    <td>
+                        <a href="{% url 'category_delete' stat.category.id %}" class="btn btn-sm btn-danger">Usuń</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     <a href="{% url 'category_add' %}" class="btn btn-success">Dodaj kategorię</a>
 {% endblock %}

@@ -1,8 +1,10 @@
+from datetime import date
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
-from wallet.models import Category, Income, Expense, Savings, Account
+from wallet.models import Category, Income, Expense, Savings, Account, Transaction
 
 
 class LoginForm(forms.Form):
@@ -12,35 +14,49 @@ class LoginForm(forms.Form):
 
 
 class RegisterForm(forms.ModelForm):
-    username = forms.CharField(max_length=64, label='',
-                               widget=forms.TextInput(attrs={'placeholder': 'Nazwa użytkownika'}))
-    password = forms.CharField(max_length=64, label='', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
 
+    password1 = forms.CharField(max_length=64, label='', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
+    password2 = forms.CharField(max_length=64, label='',
+                                widget=forms.PasswordInput(attrs={'placeholder': 'Potwierdź hasło'}))
     class Meta:
         model = User
-        fields = ['username']
+        fields = ('username',)
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
 
-    def clean(self):
-        cleaned_data = super().clean()
-        p1 = cleaned_data.get("password")
-        p2 = cleaned_data.get("re_password")
-        if p1 is None or p2 is None or p1 != p2:
-            raise ValidationError("Passwords don't match")
-        return cleaned_data
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError('Hasła nie pasują do siebie.')
+
+        return password2
 
 
 class DateFilterForm(forms.Form):
-    date_from = forms.DateField(label='Data od', widget=forms.TextInput(attrs={'type': 'date'}))
-    date_to = forms.DateField(label='Data do', widget=forms.TextInput(attrs={'type': 'date'}))
+    date_from = forms.DateField(label='Data od', widget=forms.TextInput(attrs={'type': 'date'}), input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d-%m-%Y'])
+    date_to = forms.DateField(label='Data do', widget=forms.TextInput(attrs={'type': 'date'}), input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d-%m-%Y'])
 
 
 class IncomeAddForm(forms.ModelForm):
+
     class Meta:
         model = Income
         fields = ['amount', 'date', 'description', 'category']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'})
+            'date': forms.DateInput(attrs={'type': 'date'}),
+
         }
+        labels = {
+            'amount': 'Kwota',
+            'date': 'Data',
+            'description': 'Opis',
+            'category': 'Kategoria',
+        }
+    def __init__(self, *args, **kwargs):
+        categories = kwargs.pop('categories', None)
+        super(IncomeAddForm, self).__init__(*args, **kwargs)
+        if categories:
+            self.fields['category'].queryset = categories
+
 
 
 class ExpenseAddForm(forms.ModelForm):
@@ -50,12 +66,28 @@ class ExpenseAddForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'})
         }
+        labels = {
+            'amount': 'Kwota',
+            'date': 'Data',
+            'description': 'Opis',
+            'category': 'Kategoria',
+        }
+    def __init__(self, *args, **kwargs):
+        categories = kwargs.pop('categories', None)
+        super(ExpenseAddForm, self).__init__(*args, **kwargs)
+        if categories:
+            self.fields['category'].queryset = categories
 
 
 class CategoryAddForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ['name', 'description', 'is_built']
+    def __init__(self, *args, user=None, **kwargs):
+        super(CategoryAddForm, self).__init__(*args, **kwargs)
+        self.fields['is_built'].widget = forms.HiddenInput()
+        if user is not None:
+            self.instance.user = user
 
 
 class SavingsAddForm(forms.ModelForm):
@@ -63,16 +95,16 @@ class SavingsAddForm(forms.ModelForm):
         model = Savings
         fields = ['name', 'end_date', 'goal_amount', 'categories']
         widgets = {
-            'end_date': forms.DateInput(attrs={'type': 'date'})
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+            'categories': forms.CheckboxSelectMultiple(),
         }
-    # def clean_goal_amount(self):
-    #     goal_amount = self.cleaned_data['goal_amount']
-    #     remaining_amount = self.cleaned_data.get('remaining_amount', 0)
-    #
-    #     if goal_amount > remaining_amount:
-    #         raise forms.ValidationError('Wprowadzona kwota przekracza pozostałą do osiągnięcia sumę.')
-    #
-    #     return goal_amount
+        labels = {
+            'name': 'Nazwa',
+            'end_date': 'Data zakończenia',
+            'goal_amount': 'Cel',
+            'categories': 'Kategorie'
+        }
+
 
 
 class AccountAddForm(forms.ModelForm):
@@ -81,7 +113,34 @@ class AccountAddForm(forms.ModelForm):
         exclude = ['user']
 
 
-class ForIncomeAddForm(forms.Form):
-    amount = forms.DecimalField(max_digits=20, decimal_places=2)
-    date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
-    category = forms.ModelChoiceField(queryset=Category.objects)
+class ForIncomeAddForm(forms.ModelForm):
+    class Meta:
+        model = Transaction
+        fields = ['amount', 'date', 'category']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        categories = kwargs.pop('categories', None)
+        super(ForIncomeAddForm, self).__init__(*args, **kwargs)
+        if categories:
+            self.fields['category'].queryset = categories
+
+class ForExpenseAddForm(forms.ModelForm):
+    class Meta:
+        model = Transaction
+        fields = ['amount', 'date', 'category']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+    def __init__(self, *args, **kwargs):
+        categories = kwargs.pop('categories', None)
+        super(ForExpenseAddForm, self).__init__(*args, **kwargs)
+        if categories:
+            self.fields['category'].queryset = categories
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount <= 0:
+            raise forms.ValidationError('Kwota musi być większa niż zero.')
+        return amount

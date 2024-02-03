@@ -7,8 +7,10 @@ from django.utils import timezone
 
 
 class Category(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=64)
     description = models.TextField()
+    is_built = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -33,7 +35,6 @@ class Income(models.Model):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
 
-    # currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
     def transaction_type(self):
         return 'Income'
 
@@ -45,7 +46,7 @@ class Savings(models.Model):
     end_date = models.DateField()
     goal_amount = models.DecimalField(max_digits=100, decimal_places=2)
     current_amount = models.DecimalField(max_digits=100, decimal_places=2, default=0)
-    categories = models.ManyToManyField(Category, blank=True, null=True)
+    categories = models.ManyToManyField(Category, blank=True)
     remaining_amount = models.DecimalField(max_digits=100, decimal_places=2, default=0)
     last_deposit_date = models.DateField(null=True, blank=True)
 

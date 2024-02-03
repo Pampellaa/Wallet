@@ -31,8 +31,10 @@ urlpatterns = [
     path('expense-add/', views.ExpenseAddView.as_view(), name='expense_add'),
     path('category/', views.CategoryView.as_view(), name='category'),
     path('category-add/', views.CategoryAddView.as_view(), name='category_add'),
+    path('category/delete/<int:category_id>/', views.CategoryDeleteView.as_view(), name='category_delete'),
     path('savings/', views.SavingsView.as_view(), name='savings'),
     path('savings-add/', views.SavingsAddView.as_view(), name='savings_add'),
+    path('savings-edit/<int:saving_id>/', views.SavingsEditView.as_view(), name='saving_edit'),
     path('add_money/<int:saving_id>/', views.AddMoneyToSavingsView.as_view(), name='add_money_to_savings'),
     path('savings-delete/<int:saving_id>/', views.SavingsDeleteView.as_view(), name='savings_delete'),
     path('foreign-currencies', views.ForeignCurrenciesView.as_view(), name='foreign_currencies'),
@@ -41,6 +43,6 @@ urlpatterns = [
     path('account-details/<int:account_id>/', views.AccountDetailsView.as_view(), name='account_details'),
     path('account-details/<int:account_id>/for-expense-add/', views.ForExpenseView.as_view(), name='for_expense_add'),
     path('account-details/<int:account_id>/for-income-add/', views.ForIncomeView.as_view(), name='for_income_add'),
-    path('account-details/<int:account_id>/change_to_PLN/', views.change_to_PLNView.as_view(), name='change_to_PLN'),
+    path('account-details/<int:account_id>/change_to_PLN/', views.ChangeToPLNView.as_view(), name='change_to_PLN'),
 
 ]
