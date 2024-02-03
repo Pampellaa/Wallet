@@ -25,7 +25,7 @@
                 walut obcych</a>
             <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'category' %}">Kategorie</a>
             <a class="list-group-item list-group-item-action list-group-item-light p-3"
-               href="{% url 'foreign_currencies' %}">Waluty obce</a>
+               href="{% url 'foreign_currencies' %}">Kursy walut</a>
             <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'savings' %}">Cele
                 oszczędnościowe</a>
         </div>
@@ -41,12 +41,12 @@
             </div>
         </nav>
         {% block content %}
-
+        <h2>Podsumowanie z ostatnich 30 dni: </h2>
+            <h4> {{ date30days }} - {{ today }}</h4>
             <div class="row">
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h3>Podsumowanie z ostatnich 30 dni: </h3>
                             <div class="graph-cont">
                                 <canvas id="myChart"></canvas>
                             </div>
@@ -66,14 +66,12 @@
                             </ul>
                         </div>
                         <ul>
-                            <h5>Ostatnie operacje na kontach :</h5>
-                            {% for transaction in transactionsFOR %}
-                                {% if transaction.transaction_type == 'Exchange' %}
+                            <h5>Ostatnie operacje na kontach (10 ostatnich):</h5>
+                            {% for transaction in transactionsEXC %}
                                     <li>
                                         <span>{{ transaction.amount }} {{ transaction.currency }} - Wymiana</span>
                                         <span>{{ transaction.date }}</span>
                                     </li>
-                                {% endif %}
 
                             {% endfor %}
                         </ul>
@@ -84,7 +82,7 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h3>Transakcje PLN z ostatnich 30 dni: </h3>
+                            <h3>Transakcje PLN : </h3>
                             <ul>
                                 {% for transaction in transactionsPLN %}
                                     <li>
@@ -104,7 +102,7 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
-                            <h3>Transakcje obce z ostatnich 30 dni: </h3>
+                            <h3>Transakcje obce : </h3>
                             <ul>
                                 {% for transaction in transactionsFOR %}
                                     {% if transaction.transaction_type == 'Expense' %}

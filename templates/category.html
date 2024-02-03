@@ -1,6 +1,8 @@
 {% extends 'dash.html' %}
 
 {% block content %}
+    <h5>Dane z ostatnich 30 dni ({{ date30days }} - {{ today }}):</h5>
+
     <table class="table">
         <thead>
             <tr>
@@ -38,7 +40,7 @@
                     <td>{{ stat.total_expense }} {{ stat.category.currency.code }}</td>
                     <td>{{ stat.total_income }} {{ stat.category.currency.code }}</td>
                     <td>
-                        <a href="{% url 'category_delete' stat.category.id %}" class="btn btn-sm btn-danger">Usuń</a>
+                        <a href="{% url 'category_delete' stat.category.id %}" class="btn btn-success">Usuń</a>
                     </td>
                 </tr>
             {% endfor %}

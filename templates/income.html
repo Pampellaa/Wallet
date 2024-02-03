@@ -7,11 +7,11 @@
                 <a href="{% url 'income_add' %}" class="btn btn-success">Dodaj wpływ</a>
             </div>
             <div class="col-md-6">
-                <h4 class="float-md-right">Filtruj wpływy użytkownika w zależności od daty:</h4>
+                <h4 class="float-md-right">Filtruj wpływy:</h4>
                 <form method="post" action="{% url 'income' %}" class="form-inline float-md-right mt-2 mt-md-0">
                     {% csrf_token %}
                     {{ form }}
-                    <button type="submit" class="btn btn-primary">Filtruj</button>
+                    <button type="submit" class="btn btn-success">Filtruj</button>
                 </form>
             </div>
         </div>

@@ -9,8 +9,9 @@ from django.db.models import Sum
 from django.http import Http404
 from django.shortcuts import render, redirect
 from django.views import View
-from wallet.forms import LoginForm, RegisterForm, DateFilterForm, IncomeAddForm, ExpenseAddForm, CategoryAddForm, \
-    SavingsAddForm, AccountAddForm, ForIncomeAddForm, ForExpenseAddForm
+from wallet.forms import LoginForm, RegisterForm, IncomeAddForm, ExpenseAddForm, CategoryAddForm, \
+    SavingsAddForm, AccountAddForm, ForIncomeAddForm, ForExpenseAddForm, CurrencySearchform, \
+    IncomeFilterForm
 from wallet.models import Income, Expense, Category, Savings, Transaction, Account, Currency
 
 
@@ -22,6 +23,7 @@ class IndexView(View):
 class DashboardView(LoginRequiredMixin, View):
     def get(self, request):
         date30days = date.today() - timedelta(days=30)
+        today = date.today()
 
         expense30days = Expense.objects.filter(user=request.user, date__gte=date30days).order_by('-date')
         sum_expenses = expense30days.aggregate(Sum('amount'))['amount__sum']
@@ -46,17 +48,20 @@ class DashboardView(LoginRequiredMixin, View):
             '-date')
         transactionsFOR = Transaction.objects.filter(user=request.user, date__gte=date30days).exclude(
             currency=153).order_by('-date')
+        transactionsEXC = Transaction.objects.filter(user=request.user, date__gte=date30days,
+                                                     transaction_type='Exchange').order_by('-date')[:10]
         return render(request, 'dash.html',
                       {'sum_expenses': sum_expenses, 'sum_income': sum_income, 'together': together,
                        'transactionsPLN': transactionsPLN, 'transactionsFOR': transactionsFOR, 'account': account,
-                       'sum_expenses_round': sum_expenses_round, 'sum_income_round': sum_income_round})
+                       'sum_expenses_round': sum_expenses_round, 'sum_income_round': sum_income_round,
+                       'transactionsEXC': transactionsEXC,
+                       'date30days': date30days, 'today': today})
 
 
-# 3testy
 class LoginView(View):
     def get(self, request):
         form = LoginForm()
-        return render(request, 'login2.html', {'form': form})
+        return render(request, 'login.html', {'form': form})
 
     def post(self, request):
         form = LoginForm(request.POST)
@@ -68,17 +73,15 @@ class LoginView(View):
                 login(request, user)
                 return redirect('dashboard')
         messages.info(request, 'Nieprawidłowe dane logowania. Spróbuj ponownie.')
-        return render(request, 'login2.html', {'form': form})
+        return render(request, 'login.html', {'form': form})
 
 
-# 1test
 class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect('index')
 
 
-# 4 testy
 class RegisterView(View):
     def get(self, request):
         form = RegisterForm()
@@ -89,9 +92,6 @@ class RegisterView(View):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
-            # if User.objects.filter(username=username).exists():
-            #     # form.add_error('username', 'Użytkownik o tej nazwie już istnieje.')
-            #     return render(request, 'register.html', {'form': form})
             user = User.objects.create(username=username)
             user.set_password(password)
             user.save()
@@ -100,26 +100,33 @@ class RegisterView(View):
         return render(request, 'register.html', {'form': form})
 
 
-# 2 testy
 class IncomeView(LoginRequiredMixin, View):
     def get(self, request):
-        form = DateFilterForm()
         user = request.user
+        built_in_categories = Category.objects.filter(is_built=True)
+        user_categories = Category.objects.filter(user=user, is_built=False)
+        all_categories = built_in_categories | user_categories
+        form = IncomeFilterForm(categories=all_categories)
         incomes = Income.objects.filter(user=user).order_by('-date')
         total_income = incomes.aggregate(Sum('amount'))['amount__sum']
         if total_income is not None:
             total_income = round(total_income, 2)
         else:
             total_income = 0
-        return render(request, 'income.html', {'incomes': incomes, 'total_income': total_income, 'form': form})
+        return render(request, 'income.html',
+                      {'incomes': incomes, 'total_income': total_income, 'form': form})
 
     def post(self, request):
-        form = DateFilterForm(request.POST)
+        user = request.user
+        built_in_categories = Category.objects.filter(is_built=True)
+        user_categories = Category.objects.filter(user=user, is_built=False)
+        all_categories = built_in_categories | user_categories
+        form = IncomeFilterForm(request.POST, categories=all_categories)
+        incomes = Income.objects.filter(user=user)
         if form.is_valid():
             date_from = form.cleaned_data['date_from']
             date_to = form.cleaned_data['date_to']
-            user = request.user
-            incomes = Income.objects.filter(user=user)
+            category = form.cleaned_data['category']
 
             if date_from:
                 incomes = incomes.filter(date__gte=date_from)
@@ -127,16 +134,18 @@ class IncomeView(LoginRequiredMixin, View):
             if date_to:
                 incomes = incomes.filter(date__lte=date_to)
 
-            total_income = incomes.aggregate(Sum('amount'))['amount__sum']
+            if category:
+                incomes = incomes.filter(category=category)
+
+            total_income = 0
+            if incomes.exists():
+                total_income = round(incomes.aggregate(Sum('amount'))['amount__sum'], 2)
 
             context = {'incomes': incomes, 'total_income': total_income, 'form': form}
             return render(request, 'income.html', context)
 
-        context = {'form': form}
-        return render(request, 'income.html', context)
+        return render(request, 'income.html', {'form': form})
 
-
-# 2 testy
 class IncomeAddView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
@@ -173,13 +182,14 @@ class IncomeAddView(LoginRequiredMixin, View):
         return render(request, 'income.html', {'form': form})
 
 
-# 2 testy
 class ExpenseView(LoginRequiredMixin, View):
     def get(self, request):
-        form = DateFilterForm()
         user = request.user
+        built_in_categories = Category.objects.filter(is_built=True)
+        user_categories = Category.objects.filter(user=user, is_built=False)
+        all_categories = built_in_categories | user_categories
+        form = IncomeFilterForm(categories=all_categories)
         expenses = Expense.objects.filter(user=user).order_by('-date')
-
         total_expense = expenses.aggregate(Sum('amount'))['amount__sum']
         if total_expense is not None:
             total_expense = round(total_expense, 2)
@@ -188,29 +198,35 @@ class ExpenseView(LoginRequiredMixin, View):
         return render(request, 'expense.html', {'expenses': expenses, 'total_expense': total_expense, 'form': form})
 
     def post(self, request):
-        form = DateFilterForm(request.POST)
+        user = request.user
+        built_in_categories = Category.objects.filter(is_built=True)
+        user_categories = Category.objects.filter(user=user, is_built=False)
+        all_categories = built_in_categories | user_categories
+        form = IncomeFilterForm(request.POST, categories=all_categories)
+        expenses = Expense.objects.filter(user=user)
         if form.is_valid():
             date_from = form.cleaned_data['date_from']
             date_to = form.cleaned_data['date_to']
-            user = request.user
-            expenses = Expense.objects.filter(user=user)
+            category = form.cleaned_data['category']
 
             if date_from:
                 expenses = expenses.filter(date__gte=date_from)
 
             if date_to:
                 expenses = expenses.filter(date__lte=date_to)
+            if category:
+                expenses = expenses.filter(category=category)
 
-            total_expense = expenses.aggregate(Sum('amount'))['amount__sum']
+            total_expense = 0
+            if expenses.exists():
+                total_expense = expenses.aggregate(Sum('amount'))['amount__sum']
 
             context = {'expenses': expenses, 'total_expense': total_expense, 'form': form}
             return render(request, 'expense.html', context)
 
-        context = {'form': form}
-        return render(request, 'expense.html', context)
+        return render(request, 'expense.html', {'form': form})
 
 
-# 2 testy
 class ExpenseAddView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
@@ -246,30 +262,34 @@ class ExpenseAddView(LoginRequiredMixin, View):
         return render(request, 'expense.html', {'form': form})
 
 
-# 2 testy
 class CategoryView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
         main_categories = Category.objects.filter(is_built=True)
         user_categories = Category.objects.filter(is_built=False, user=user)
-
+        date30days = date.today() - timedelta(days=30)
+        today = date.today()
         main_stats = self.get_category_stats(user, main_categories)
         user_stats = self.get_category_stats(user, user_categories)
 
         return render(request, 'category.html', {'main_categories': main_categories, 'main_stats': main_stats,
-                                                 'user_categories': user_categories, 'user_stats': user_stats})
+                                                 'user_categories': user_categories, 'user_stats': user_stats,
+                                                 'date30days': date30days, 'today': today})
 
     def get_category_stats(self, user, categories):
         stats = []
+        date30days = date.today() - timedelta(days=30)
         for category in categories:
             total_expense = Expense.objects.filter(
                 user=user,
                 category=category,
+                date__gte=date30days
             ).aggregate(Sum('amount'))['amount__sum'] or 0
 
             total_income = Income.objects.filter(
                 user=user,
                 category=category,
+                date__gte=date30days
             ).aggregate(Sum('amount'))['amount__sum'] or 0
 
             stats.append({
@@ -280,7 +300,6 @@ class CategoryView(LoginRequiredMixin, View):
         return stats
 
 
-# 2 testy
 class CategoryAddView(LoginRequiredMixin, View):
     def get(self, request):
         form = CategoryAddForm()
@@ -295,7 +314,6 @@ class CategoryAddView(LoginRequiredMixin, View):
         return render(request, 'category.html', {'form': form})
 
 
-# 3 testy
 class CategoryDeleteView(LoginRequiredMixin, View):
     def get(self, request, category_id):
         category = Category.objects.get(id=category_id)
@@ -310,14 +328,12 @@ class CategoryDeleteView(LoginRequiredMixin, View):
             raise Http404("Category does not exist")
 
 
-# 2 testy
 class SavingsView(LoginRequiredMixin, View):
     def get(self, request):
         savings = Savings.objects.filter(user=request.user)
         return render(request, 'savings.html', {'savings': savings})
 
 
-# 2testy
 class SavingsEditView(LoginRequiredMixin, View):
     def get(self, request, saving_id):
         saving = Savings.objects.get(user=request.user, id=saving_id)
@@ -334,7 +350,6 @@ class SavingsEditView(LoginRequiredMixin, View):
         return render(request, 'savings.html', {'form': form})
 
 
-# 2 testy
 class SavingsAddView(LoginRequiredMixin, View):
     def get(self, request):
         form = SavingsAddForm()
@@ -350,7 +365,6 @@ class SavingsAddView(LoginRequiredMixin, View):
         return render(request, 'savings.html', {'form': form})
 
 
-# 2 testy
 class SavingsDeleteView(LoginRequiredMixin, View):
     def post(self, request, saving_id):
         saving = Savings.objects.get(pk=saving_id)
@@ -358,7 +372,6 @@ class SavingsDeleteView(LoginRequiredMixin, View):
         return redirect('savings')
 
 
-# 2 testy
 class AddMoneyToSavingsView(LoginRequiredMixin, View):
     def post(self, request, saving_id):
         amount = Decimal(request.POST.get('amount'))
@@ -376,21 +389,24 @@ class AddMoneyToSavingsView(LoginRequiredMixin, View):
                           {'error_message': error_message, 'savings': savings_list, 'invalid_saving_id': saving_id})
 
 
-# 1 test
-class ForeignCurrenciesView(View):
+class ForeignCurrenciesView(LoginRequiredMixin,View):
     def get(self, request):
-        currencies = Currency.objects.all().order_by('code')
-        return render(request, 'currency.html', {"currencies": currencies})
+        sort_order = request.GET.get('sort_order', 'code')
+        currencies = Currency.objects.all().order_by(sort_order)
+        form = CurrencySearchform(request.GET)
+        name = ''
+        if form.is_valid():
+            name = form.cleaned_data.get('name', '')
+            currencies = currencies.filter(name__icontains=name)
+        return render(request, 'currency.html', {'currencies': currencies, 'sort_order': sort_order, 'form': form})
 
 
-# 2 testy
 class AccountsView(LoginRequiredMixin, View):
     def get(self, request):
         accounts = Account.objects.filter(user=request.user)
         return render(request, 'accounts.html', {'accounts': accounts})
 
 
-# 2 testy
 class AccountAddView(LoginRequiredMixin, View):
     def get(self, request):
         form = AccountAddForm()
@@ -407,7 +423,6 @@ class AccountAddView(LoginRequiredMixin, View):
         return render(request, 'add_form.html', {'form': form})
 
 
-# 1test
 class AccountDetailsView(LoginRequiredMixin, View):
     def get(self, request, account_id):
         account = Account.objects.get(id=account_id, user=request.user)
@@ -420,7 +435,6 @@ class AccountDetailsView(LoginRequiredMixin, View):
         return render(request, 'account_details.html', {"account": account, 'transactions': transactions})
 
 
-# 2 testy
 class ForIncomeView(LoginRequiredMixin, View):
     def get(self, request, account_id):
         user = request.user
@@ -450,7 +464,6 @@ class ForIncomeView(LoginRequiredMixin, View):
         return render(request, 'add_form.html', {'form': form})
 
 
-# 3 testy
 class ForExpenseView(LoginRequiredMixin, View):
     def get(self, request, account_id):
         user = request.user
@@ -485,7 +498,6 @@ class ForExpenseView(LoginRequiredMixin, View):
         return render(request, 'add_form.html', {'form': form})
 
 
-# 1 test
 class ChangeToPLNView(LoginRequiredMixin, View):
     def post(self, request, account_id):
         amount = Decimal(request.POST.get('amount'))

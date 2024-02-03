@@ -4,7 +4,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
-from wallet.models import Category, Income, Expense, Savings, Account, Transaction
+from wallet.models import Category, Income, Expense, Savings, Account, Transaction, Currency
 
 
 class LoginForm(forms.Form):
@@ -14,13 +14,23 @@ class LoginForm(forms.Form):
 
 
 class RegisterForm(forms.ModelForm):
-
     password1 = forms.CharField(max_length=64, label='', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
     password2 = forms.CharField(max_length=64, label='',
                                 widget=forms.PasswordInput(attrs={'placeholder': 'Potwierdź hasło'}))
+
     class Meta:
         model = User
         fields = ('username',)
+        widgets = {
+            'username': forms.TextInput(attrs={'placeholder': 'Nazwa użytkownika'})
+        }
+        labels = {
+            'username': '',
+        }
+        help_texts = {
+            'username': '',
+        }
+
     def clean_password2(self):
         password1 = self.cleaned_data.get('password1')
         password2 = self.cleaned_data.get('password2')
@@ -31,13 +41,29 @@ class RegisterForm(forms.ModelForm):
         return password2
 
 
-class DateFilterForm(forms.Form):
-    date_from = forms.DateField(label='Data od', widget=forms.TextInput(attrs={'type': 'date'}), input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d-%m-%Y'])
-    date_to = forms.DateField(label='Data do', widget=forms.TextInput(attrs={'type': 'date'}), input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d-%m-%Y'])
+class IncomeFilterForm(forms.Form):
+    date_from = forms.DateField(label='Data od', widget=forms.TextInput(attrs={'type': 'date'}), required=False)
+    date_to = forms.DateField(label='Data do', widget=forms.TextInput(attrs={'type': 'date'}), required=False)
+    category = forms.ModelChoiceField(queryset=Category.objects.all(), label='Kategoria', empty_label='--wszystkie--', required=False)
 
+    def __init__(self, *args, **kwargs):
+        categories = kwargs.pop('categories', None)
+        super(IncomeFilterForm, self).__init__(*args, **kwargs)
+        if categories:
+            self.fields['category'].queryset = categories
+
+# class CategoryFilterForm(forms.ModelForm):
+#     class Meta:
+#         model = Category
+#         fields = ['name']
+#         labels ={
+#             'name':'Nazwa'
+#         }
+        # widgets = {
+        #     'category' : forms.SelectMultiple()
+        # }
 
 class IncomeAddForm(forms.ModelForm):
-
     class Meta:
         model = Income
         fields = ['amount', 'date', 'description', 'category']
@@ -51,12 +77,12 @@ class IncomeAddForm(forms.ModelForm):
             'description': 'Opis',
             'category': 'Kategoria',
         }
+
     def __init__(self, *args, **kwargs):
         categories = kwargs.pop('categories', None)
         super(IncomeAddForm, self).__init__(*args, **kwargs)
         if categories:
             self.fields['category'].queryset = categories
-
 
 
 class ExpenseAddForm(forms.ModelForm):
@@ -72,6 +98,7 @@ class ExpenseAddForm(forms.ModelForm):
             'description': 'Opis',
             'category': 'Kategoria',
         }
+
     def __init__(self, *args, **kwargs):
         categories = kwargs.pop('categories', None)
         super(ExpenseAddForm, self).__init__(*args, **kwargs)
@@ -83,6 +110,7 @@ class CategoryAddForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = ['name', 'description', 'is_built']
+
     def __init__(self, *args, user=None, **kwargs):
         super(CategoryAddForm, self).__init__(*args, **kwargs)
         self.fields['is_built'].widget = forms.HiddenInput()
@@ -106,7 +134,6 @@ class SavingsAddForm(forms.ModelForm):
         }
 
 
-
 class AccountAddForm(forms.ModelForm):
     class Meta:
         model = Account
@@ -127,6 +154,7 @@ class ForIncomeAddForm(forms.ModelForm):
         if categories:
             self.fields['category'].queryset = categories
 
+
 class ForExpenseAddForm(forms.ModelForm):
     class Meta:
         model = Transaction
@@ -134,13 +162,21 @@ class ForExpenseAddForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
         }
+
     def __init__(self, *args, **kwargs):
         categories = kwargs.pop('categories', None)
         super(ForExpenseAddForm, self).__init__(*args, **kwargs)
         if categories:
             self.fields['category'].queryset = categories
+
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')
         if amount <= 0:
             raise forms.ValidationError('Kwota musi być większa niż zero.')
         return amount
+
+
+class CurrencySearchform(forms.ModelForm):
+    class Meta:
+        model = Currency
+        fields = ['name']

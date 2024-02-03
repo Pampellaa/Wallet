@@ -562,14 +562,24 @@ def test_add_money_to_savings_nolog(saving):
 
 
 @pytest.mark.django_db
-def test_foreign_currency_list():
+def test_foreign_currency_list(user):
     client = Client()
+    client.force_login(user)
     url = reverse('foreign_currencies')
     response = client.get(url)
     assert response.status_code == 200
     assert 'currencies' in response.context
     currencies = response.context['currencies']
     assert all(currencies[i].code <= currencies[i + 1].code for i in range(len(currencies) - 1))
+
+@pytest.mark.django_db
+def test_foreign_currency_list_nolog():
+    client = Client()
+    url = reverse('foreign_currencies')
+    response = client.get(url)
+    assert response.status_code == 302
+    assert reverse('login') in response.url
+
 
 
 @pytest.mark.django_db
