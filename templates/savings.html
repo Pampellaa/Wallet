@@ -17,7 +17,7 @@
                             <p>Ostatnia wpłata: {{ saving.last_deposit_date }}</p>
                             <p>Pozostało: {{ saving.remaining_amount }} zł</p>
                             {% if saving.remaining_amount == 0 %}
-                                <p>Gratulacje! Osiągnąłeś swój cel oszczędnościowy!</p>
+                                <p style="color: orangered">Gratulacje! Osiągnąłeś swój cel oszczędnościowy!</p>
                                 <form method="post" action="{% url 'savings_delete' saving.id %}">
                                     {% csrf_token %}
                                     <button class="btn btn-success" type="submit"> Usuń cel</button>

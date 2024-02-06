@@ -22,7 +22,8 @@
                 <ul class="list-group">
                     {% for expense in expenses %}
                         <li class="list-group-item">
-                            {{ expense.amount }} zł - {{ expense.date }} - {{ expense.category.name }}
+                            <span style="color: orangered;">{{ expense.amount }} zł - {{ expense.category.name }}</span>
+                            <span class="float-end"> {{ expense.date }}</span>
                         </li>
                     {% endfor %}
                 </ul>

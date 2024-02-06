@@ -27,15 +27,17 @@ class DashboardView(LoginRequiredMixin, View):
 
         expense30days = Expense.objects.filter(user=request.user, date__gte=date30days).order_by('-date')
         sum_expenses = expense30days.aggregate(Sum('amount'))['amount__sum']
-        sum_expenses_round = 0
-        if sum_expenses is not None:
-            sum_expenses_round = round(sum_expenses, 0)
+        sum_expenses_round = round(sum_expenses, 0)
+        # sum_expenses_round = 0
+        # if sum_expenses is not None:
+        #     sum_expenses_round = round(sum_expenses, 0)
 
         income30days = Income.objects.filter(user=request.user, date__gte=date30days).order_by('-date')
         sum_income = income30days.aggregate(Sum('amount'))['amount__sum']
-        sum_income_round = 0
-        if sum_income is not None:
-            sum_income_round = round(sum_income, 0)
+        sum_income_round = round(sum_income, 0)
+        # sum_income_round = 0
+        # if sum_income is not None:
+        #     sum_income_round = round(sum_income, 0)
 
         if sum_income is not None and sum_expenses is not None:
             together = round(sum_income - sum_expenses, 2)
@@ -72,8 +74,10 @@ class LoginView(View):
             if user is not None:
                 login(request, user)
                 return redirect('dashboard')
-        messages.info(request, 'Nieprawidłowe dane logowania. Spróbuj ponownie.')
+        form.add_error('username', 'Nieprawidłowe dane logowania. Spróbuj ponownie.')
         return render(request, 'login.html', {'form': form})
+        # messages.error(request, 'Nieprawidłowe dane logowania. Spróbuj ponownie.')
+        # return render(request, 'login.html', {'form': form})
 
 
 class LogoutView(View):
@@ -239,10 +243,16 @@ class ExpenseAddView(LoginRequiredMixin, View):
     def post(self, request):
         form = ExpenseAddForm(request.POST, categories=Category.objects.all())
         if form.is_valid():
+            user = request.user
             amount = form.cleaned_data['amount']
             date = form.cleaned_data['date']
             description = form.cleaned_data['description']
             category = form.cleaned_data['category']
+            incomes = Income.objects.filter(user=user)
+            total_income = round(incomes.aggregate(Sum('amount'))['amount__sum'], 2)
+            if amount > total_income:
+                form.add_error('amount', "Nie można dodać wydatku większego niż saldo na koncie.")
+                return render(request, 'add_form.html', {'form': form})
             Transaction.objects.create(
                 user=request.user,
                 amount=amount,
@@ -320,12 +330,15 @@ class CategoryDeleteView(LoginRequiredMixin, View):
         return render(request, 'delete_confirmation.html', {'category': category})
 
     def post(self, request, category_id):
-        try:
-            category = Category.objects.get(id=category_id)
-            category.delete()
-            return redirect('category')
-        except Category.DoesNotExist:
-            raise Http404("Category does not exist")
+        category = Category.objects.get(id=category_id)
+        category.delete()
+        return redirect('category')
+        # try:
+        #     category = Category.objects.get(id=category_id)
+        #     category.delete()
+        #     return redirect('category')
+        # except Category.DoesNotExist:
+        #     raise Http404("Category does not exist")
 
 
 class SavingsView(LoginRequiredMixin, View):
@@ -382,11 +395,11 @@ class AddMoneyToSavingsView(LoginRequiredMixin, View):
             savings_goal.remaining_amount -= amount
             savings_goal.save()
             return redirect('savings')
-        else:
-            error_message = 'Wprowadzona kwota przekracza pozostałą do osiągnięcia sumę.'
-            savings_list = Savings.objects.all()
-            return render(request, 'savings.html',
-                          {'error_message': error_message, 'savings': savings_list, 'invalid_saving_id': saving_id})
+
+        error_message = 'Wprowadzona kwota przekracza pozostałą do osiągnięcia sumę.'
+        savings_list = Savings.objects.all()
+        return render(request, 'savings.html',
+                      {'error_message': error_message, 'savings': savings_list, 'invalid_saving_id': saving_id})
 
 
 class ForeignCurrenciesView(LoginRequiredMixin,View):
@@ -394,7 +407,7 @@ class ForeignCurrenciesView(LoginRequiredMixin,View):
         sort_order = request.GET.get('sort_order', 'code')
         currencies = Currency.objects.all().order_by(sort_order)
         form = CurrencySearchform(request.GET)
-        name = ''
+        # name = ''
         if form.is_valid():
             name = form.cleaned_data.get('name', '')
             currencies = currencies.filter(name__icontains=name)
@@ -426,7 +439,7 @@ class AccountAddView(LoginRequiredMixin, View):
 class AccountDetailsView(LoginRequiredMixin, View):
     def get(self, request, account_id):
         account = Account.objects.get(id=account_id, user=request.user)
-        transactions = Transaction.objects.filter(currency_id=account.currency_id)
+        transactions = Transaction.objects.filter(currency_id=account.currency_id).order_by('-date')
         for transaction in transactions:
             if transaction.transaction_type == 'Income':
                 transaction.transaction_type = 'Wpływ'
@@ -455,11 +468,20 @@ class ForIncomeView(LoginRequiredMixin, View):
             account.balance += int(new_amount)
             account.save()
             currency = account.currency
-            new_transaction = form.save(commit=False)
-            new_transaction.user = user
-            new_transaction.transaction_type = 'Income'
-            new_transaction.currency = currency
-            new_transaction.save()
+            Transaction.objects.create(
+                user=user,
+                transaction_type='Income',
+                currency=currency,
+                category=category,
+                date=date,
+                amount=new_amount)
+            # new_transaction = form.save(commit=False)
+            # new_transaction.user = user
+            # new_transaction.transaction_type = 'Income'
+            # new_transaction.currency = currency
+            # new_transaction.category = category
+            # new_transaction.date = date
+            # new_transaction.save()
             return redirect('account_details', account.id)
         return render(request, 'add_form.html', {'form': form})
 
@@ -481,19 +503,26 @@ class ForExpenseView(LoginRequiredMixin, View):
             category = form.cleaned_data['category']
             date = form.cleaned_data['date']
             account = Account.objects.get(id=account_id)
-            if account.balance - int(new_amount) < 0:
+            if account.balance < int(new_amount):
                 form.add_error('amount', "Nie można dodać wydatku większego niż saldo na koncie.")
                 return render(request, 'add_form.html', {'form': form})
             account.balance -= int(new_amount)
             account.save()
             currency = account.currency
-            new_transaction = form.save(commit=False)
-            new_transaction.user = user
-            new_transaction.transaction_type = 'Expense'
-            new_transaction.currency = currency
-            new_transaction.date = date
-            new_transaction.category = category
-            new_transaction.save()
+            Transaction.objects.create(
+                user=user,
+                transaction_type='Expense',
+                currency=currency,
+                category=category,
+                date=date,
+                amount=new_amount)
+            # new_transaction = form.save(commit=False)
+            # new_transaction.user = user
+            # new_transaction.transaction_type = 'Expense'
+            # new_transaction.currency = currency
+            # new_transaction.date = date
+            # new_transaction.category = category
+            # new_transaction.save()
             return redirect('account_details', account_id)
         return render(request, 'add_form.html', {'form': form})
 
@@ -502,6 +531,10 @@ class ChangeToPLNView(LoginRequiredMixin, View):
     def post(self, request, account_id):
         amount = Decimal(request.POST.get('amount'))
         account = Account.objects.get(id=account_id)
+        if amount > account.balance:
+            messages.info(request, "Nie można wymienić więcej niż dostępne saldo na koncie.")
+            return redirect('account_details', account_id)
+
         real_amount = int(amount) * Decimal(account.currency.exchange_rate)
         Income.objects.create(user=request.user, amount=real_amount, date=datetime.now())
         Transaction.objects.create(user=request.user, amount=amount, transaction_type='Exchange',

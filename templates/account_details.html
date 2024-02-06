@@ -5,13 +5,20 @@
     <div class="container mt-4">
         <h3>{{ account.name }}</h3>
         <h5>Kwota na koncie: {{ account.balance }} {{ account.currency.code }}</h5>
+        <h5> 1  {{ account.currency.code }} = {{ account.currency.exchange_rate }} PLN</h5>
         <form class="d-flex" method="post" action="{% url 'change_to_PLN' account.id %}">
             {% csrf_token %}
             <div class="input-group">
                 <input class="form-control" type="number" name="amount" step="0.01" placeholder="Wprowadź kwotę">
                 <div class="input-group-append">
                     <button class="btn btn-primary" type="submit"><i class="fas fa-plus"></i> Wymień na PLN</button>
-                </div>
+                </div>  
+                {% if messages %}
+                      {% for message in messages %}
+                        {{ message }}
+                      {% endfor %}
+                {% endif %}
+                
             </div>
         </form>
         <div class="btn-group mt-3" role="group" aria-label="Basic example">

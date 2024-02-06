@@ -22,7 +22,8 @@
                 <ul class="list-group">
                     {% for income in incomes %}
                         <li class="list-group-item">
-                            {{ income.amount }} zł - {{ income.date }} - {{ income.category.name }}
+                            <span style="color: blueviolet;">{{ income.amount }} zł - {{ income.category.name }}</span>
+                            <span class="float-end"> {{ income.date }}</span>
                         </li>
                     {% endfor %}
                 </ul>

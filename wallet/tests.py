@@ -761,7 +761,7 @@ def test_changetopln(user, foreign_accounts):
     client = Client()
     client.force_login(user)
     url = reverse('change_to_PLN', args=[foreign_accounts[0].id])
-    data = {'amount': 100}
+    data = {'amount': 1}
     response = client.post(url, data)
     assert response.status_code == 302
     assert response.url == reverse('account_details', args=[foreign_accounts[0].id])
@@ -771,6 +771,22 @@ def test_changetopln(user, foreign_accounts):
                               date=datetime.now())
     assert Transaction.objects.get(user=user, amount=data['amount'], transaction_type='Exchange',
                                    currency=foreign_accounts[0].currency, date=datetime.now())
+
+
+@pytest.mark.django_db
+def test_changetopln_invalid(user, foreign_accounts):
+    client = Client()
+    client.force_login(user)
+    url = reverse('change_to_PLN', args=[foreign_accounts[0].id])
+    data = {'amount': 100}
+    response = client.post(url, data)
+    assert response.status_code == 302
+    assert response.url == reverse('account_details', args=[foreign_accounts[0].id])
+    assert not Income.objects.filter(user=user).exists()
+    assert not Transaction.objects.filter(user=user).exists()
+    account = Account.objects.get(id=foreign_accounts[0].id)
+    assert account.balance == int(foreign_accounts[0].balance)
+
 
 
 @pytest.mark.django_db

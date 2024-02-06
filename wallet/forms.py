@@ -110,6 +110,10 @@ class CategoryAddForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = ['name', 'description', 'is_built']
+        labels = {
+            'name': 'Nazwa',
+            'description': 'Opis'
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super(CategoryAddForm, self).__init__(*args, **kwargs)
@@ -138,6 +142,16 @@ class AccountAddForm(forms.ModelForm):
     class Meta:
         model = Account
         exclude = ['user']
+        labels = {
+            'name': 'Nazwa',
+            'currency': 'Waluta',
+            'balance': 'Balans'
+        }
+    #sortuję waluty alfabetycznie:
+    def __init__(self, *args, **kwargs):
+        super(AccountAddForm, self).__init__(*args, **kwargs)
+        currencies = Currency.objects.all().order_by('name')
+        self.fields['currency'].queryset = currencies
 
 
 class ForIncomeAddForm(forms.ModelForm):
@@ -146,6 +160,11 @@ class ForIncomeAddForm(forms.ModelForm):
         fields = ['amount', 'date', 'category']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'amount': 'Kwota',
+            'date': 'Data',
+            'category': 'Kategoria'
         }
 
     def __init__(self, *args, **kwargs):
@@ -161,6 +180,11 @@ class ForExpenseAddForm(forms.ModelForm):
         fields = ['amount', 'date', 'category']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'amount': 'Kwota',
+            'date': 'Data',
+            'category': 'Kategoria'
         }
 
     def __init__(self, *args, **kwargs):
