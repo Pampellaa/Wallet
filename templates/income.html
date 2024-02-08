@@ -10,7 +10,7 @@
                 <h4 class="float-md-right">Filtruj wpływy:</h4>
                 <form method="post" action="{% url 'income' %}" class="form-inline float-md-right mt-2 mt-md-0">
                     {% csrf_token %}
-                    {{ form }}
+                    {{ form2 }}
                     <button type="submit" class="btn btn-success">Filtruj</button>
                 </form>
             </div>
@@ -18,7 +18,7 @@
 
         {% if incomes %}
             <div class="mt-4">
-                <h3>Wpływy:</h3>
+                <h3>Wpływy:</h3> 
                 <ul class="list-group">
                     {% for income in incomes %}
                         <li class="list-group-item">

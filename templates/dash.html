@@ -33,6 +33,7 @@
 
     <!-- Page content wrapper-->
     <div id="page-content-wrapper">
+    
         <!-- Top navigation-->
         <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
             <div class="container-fluid">
@@ -68,11 +69,10 @@
                         <ul>
                             <h5>Ostatnie operacje na kontach (10 ostatnich):</h5>
                             {% for transaction in transactionsEXC %}
-                                    <li>
-                                        <span>{{ transaction.amount }} {{ transaction.currency }} - Wymiana</span>
-                                        <span>{{ transaction.date }}</span>
-                                    </li>
-
+                                <li>
+                                    <span>{{ transaction.amount }} {{ transaction.currency }} - ({{ transaction.change_in_PLN }} PLN) - Wymiana</span>
+                                    <span>{{ transaction.date }}</span>
+                                </li>
                             {% endfor %}
                         </ul>
                     </div>

@@ -16,7 +16,7 @@ def incomes(user):
     incomes = [
         Income.objects.create(amount=50, user=user, date='2024-08-01'),
         Income.objects.create(amount=100, user=user, date='2024-08-02'),
-        Income.objects.create(amount=75, user=user, date='2024-08-03')
+        Income.objects.create(amount=75, user=user, date='2024-08-03', category=Category.objects.create(name='wymiana'))
     ]
     return incomes
 
@@ -163,6 +163,11 @@ def foreign_accounts(user, foreign_currency):
         Account.objects.create(name='CCC', balance='3', currency=foreign_currency[2], user=user),
     ]
     return accounts
+
+@pytest.fixture
+def account(user, foreign_currency):
+    account = Account.objects.create(name='DDD', balance='100', currency=foreign_currency[0], user=user)
+    return account
 
 
 @pytest.fixture

@@ -1,9 +1,17 @@
 {% extends 'dash.html' %}
 
 {% block content %}
+    <div class="form-container">
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-success">Wyślij</button>
     </form>
+    </div>
+    <style> 
+        .form-container {
+      max-width: 600px;
+      margin: 50px;
+      }
+    </style>
 {% endblock %}

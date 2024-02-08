@@ -1,13 +1,10 @@
 from datetime import datetime
 from decimal import Decimal
-
 import pytest
 from django.test import Client
 from django.urls import reverse
 from django.contrib.auth.models import User, AnonymousUser
-from pytest_django.asserts import assertRedirects
-
-from wallet.forms import IncomeAddForm, ExpenseAddForm, SavingsAddForm, LoginForm, RegisterForm, CategoryAddForm, \
+from wallet.forms import IncomeExpenseAddForm, SavingsAddForm, LoginForm, RegisterForm, CategoryAddForm, \
     AccountAddForm, ForIncomeAddForm, ForExpenseAddForm
 from wallet.models import Income, Category, Transaction, Expense, Savings, Account
 from wallet.views import CategoryView
@@ -20,11 +17,11 @@ def test_dashboard(user, expenses, incomes, transaction_pln, transaction_for, fo
     url = reverse('dashboard')
     response = client.get(url)
     assert response.status_code == 200
-    assert response.context['sum_expenses'] == Decimal('225.0')
-    assert response.context['sum_income'] == Decimal('225.0')
-    assert response.context['together'] == Decimal('0')
+    assert response.context['sum_expenses'] == Decimal('225')
+    assert response.context['sum_income'] == Decimal('150')
+    assert response.context['together'] == Decimal('-75')
     assert response.context['sum_expenses_round'] == 225
-    assert response.context['sum_income_round'] == 225
+    assert response.context['sum_income_round'] == 150
     assert response.context['transactionsPLN'].count() == 1
     assert response.context['transactionsFOR'].count() == 1
     assert response.context['account'].count() == 3
@@ -66,7 +63,7 @@ def test_login_post_invalid():
     data = {'username': 'testinvalid', 'password': 'testpassword'}
     response = client.post(url, data)
     assert response.status_code == 200
-    assert list(response.context['messages'])[0].message == 'Nieprawidłowe dane logowania. Spróbuj ponownie.'
+    assert 'Nieprawidłowe dane logowania. Spróbuj ponownie.' in response.content.decode()
 
 
 @pytest.mark.django_db
@@ -201,7 +198,7 @@ def test_incomeAdd_get(category, user):
     url = reverse('income_add')
     response = client.get(url)
     assert response.status_code == 200
-    assert isinstance(response.context['form'], IncomeAddForm)
+    assert isinstance(response.context['form'], IncomeExpenseAddForm)
 
 
 @pytest.mark.django_db
@@ -248,7 +245,7 @@ def test_expense_add_get(user):
     url = reverse('expense_add')
     response = client.get(url)
     assert response.status_code == 200
-    assert isinstance(response.context['form'], ExpenseAddForm)
+    assert isinstance(response.context['form'], IncomeExpenseAddForm)
 
 
 @pytest.mark.django_db
@@ -259,7 +256,6 @@ def test_expense_add_post(user, category, zloty):
     data = {
         'amount': 100,
         'date': '2020-05-21',
-        'description': 'test description',
         'category': category.id,
         'user': user.id
     }
@@ -269,17 +265,16 @@ def test_expense_add_post(user, category, zloty):
     assert Expense.objects.get(
         amount=data['amount'],
         date=data['date'],
-        description=data['description'],
         category=category,
         user=user
     )
     assert Transaction.objects.get(
         amount=data['amount'],
         date=data['date'],
-        description=data['description'],
         category=category,
         user=user,
-        transaction_type='Expense'
+        transaction_type='Expense',
+        currency=zloty
     )
 
 
@@ -572,6 +567,7 @@ def test_foreign_currency_list(user):
     currencies = response.context['currencies']
     assert all(currencies[i].code <= currencies[i + 1].code for i in range(len(currencies) - 1))
 
+
 @pytest.mark.django_db
 def test_foreign_currency_list_nolog():
     client = Client()
@@ -579,7 +575,6 @@ def test_foreign_currency_list_nolog():
     response = client.get(url)
     assert response.status_code == 302
     assert reverse('login') in response.url
-
 
 
 @pytest.mark.django_db
@@ -654,6 +649,18 @@ def test_account_detail(user, foreign_accounts, transactions, foreign_currency):
     assert foreign_accounts[0].name == 'AAA'
     assert len(transactions) == 1
     assert response.context['transactions'].count() == 1
+
+
+@pytest.mark.django_db
+def test_accountDelete(user, zloty):
+    account = Account.objects.create(user=user, name='Test Account', currency=zloty, balance=1000)
+    client = Client()
+    client.force_login(user)
+    url = reverse('account_delete', args=[account.id])
+    response = client.post(url)
+    assert Account.objects.filter(pk=account.id).exists() is False
+    assert response.status_code == 302
+    assert response.url == reverse('accounts')
 
 
 @pytest.mark.django_db
@@ -757,20 +764,21 @@ def test_expense_add_nolog(foreign_accounts):
 
 
 @pytest.mark.django_db
-def test_changetopln(user, foreign_accounts):
+def test_changetopln(user, account):
     client = Client()
     client.force_login(user)
-    url = reverse('change_to_PLN', args=[foreign_accounts[0].id])
+    url = reverse('change_to_PLN', args=[account.id])
     data = {'amount': 1}
+    category, created = Category.objects.get_or_create(name='Wymiana', defaults={'is_built': True})
     response = client.post(url, data)
     assert response.status_code == 302
-    assert response.url == reverse('account_details', args=[foreign_accounts[0].id])
-    updated_account = Account.objects.get(id=foreign_accounts[0].id)
-    assert updated_account.balance == int(foreign_accounts[0].balance) - data['amount']
-    assert Income.objects.get(user=user, amount=data['amount'] * int(foreign_accounts[0].currency.exchange_rate),
+    assert response.url == reverse('account_details', args=[account.id])
+    updated_account = Account.objects.get(id=account.id)
+    assert updated_account.balance == int(account.balance) - data['amount']
+    assert Income.objects.get(user=user, amount=data['amount'] * int(account.currency.exchange_rate),
                               date=datetime.now())
     assert Transaction.objects.get(user=user, amount=data['amount'], transaction_type='Exchange',
-                                   currency=foreign_accounts[0].currency, date=datetime.now())
+                                   currency=account.currency, date=datetime.now())
 
 
 @pytest.mark.django_db
@@ -786,7 +794,6 @@ def test_changetopln_invalid(user, foreign_accounts):
     assert not Transaction.objects.filter(user=user).exists()
     account = Account.objects.get(id=foreign_accounts[0].id)
     assert account.balance == int(foreign_accounts[0].balance)
-
 
 
 @pytest.mark.django_db

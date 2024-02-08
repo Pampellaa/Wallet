@@ -10,7 +10,7 @@
                 <h4 class="float-md-right">Filtruj wydatki :</h4>
                 <form method="post" action="{% url 'expense' %}" class="form-inline float-md-right mt-2 mt-md-0">
                     {% csrf_token %}
-                    {{ form }}
+                    {{ form2 }}
                     <button type="submit" class="btn btn-success">Filtruj</button>
                 </form>
             </div>

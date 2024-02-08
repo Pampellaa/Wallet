@@ -39,6 +39,7 @@ urlpatterns = [
     path('savings-delete/<int:saving_id>/', views.SavingsDeleteView.as_view(), name='savings_delete'),
     path('foreign-currencies', views.ForeignCurrenciesView.as_view(), name='foreign_currencies'),
     path('accounts/', views.AccountsView.as_view(), name='accounts'),
+    path('account-delete/<int:account_id>', views.AccountDeleteView.as_view(), name='account_delete'),
     path('account-add/', views.AccountAddView.as_view(), name='account_add'),
     path('account-details/<int:account_id>/', views.AccountDetailsView.as_view(), name='account_details'),
     path('account-details/<int:account_id>/for-expense-add/', views.ForExpenseView.as_view(), name='for_expense_add'),

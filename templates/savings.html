@@ -8,20 +8,28 @@
             {% for saving in savings %}
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h4>{{ saving.name }} <a href="{% url 'saving_edit' saving.id %}">Edytuj</a></h4>
-                            
+                        <div class="saving-details">
+                            <h4>
+                                <div>{{ saving.name }}</div>
+                                <div>
+                                    <a href="{% url 'saving_edit' saving.id %}" style="color: blue; font-size: 17px;">Edytuj</a>
+                                    <form method="post" action="{% url 'savings_delete' saving.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn" style="color: orangered; text-decoration: underline;">Usuń cel</button>
+                                    </form>
+                                </div>
+                            </h4>
+
+
+                        
                             <p>Cel: {{ saving.goal_amount }} zł</p>
                             <p>Obecnie: {{ saving.current_amount }} zł</p>
                             <p>Miesięczna wpłata aby osiągnąć cel: {{ saving.monthly_deposit|floatformat:2 }} zł</p>
                             <p>Ostatnia wpłata: {{ saving.last_deposit_date }}</p>
                             <p>Pozostało: {{ saving.remaining_amount }} zł</p>
+                        
                             {% if saving.remaining_amount == 0 %}
                                 <p style="color: orangered">Gratulacje! Osiągnąłeś swój cel oszczędnościowy!</p>
-                                <form method="post" action="{% url 'savings_delete' saving.id %}">
-                                    {% csrf_token %}
-                                    <button class="btn btn-success" type="submit"> Usuń cel</button>
-                                </form>
                             {% endif %}
                         </div>
                              {% if invalid_saving_id == saving.id %}
