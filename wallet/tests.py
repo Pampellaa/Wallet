@@ -5,7 +5,7 @@ from django.test import Client
 from django.urls import reverse
 from django.contrib.auth.models import User, AnonymousUser
 from wallet.forms import IncomeExpenseAddForm, SavingsAddForm, LoginForm, RegisterForm, CategoryAddForm, \
-    AccountAddForm, ForIncomeAddForm, ForExpenseAddForm
+    AccountAddForm, ForIncomeExpenseAddForm
 from wallet.models import Income, Category, Transaction, Expense, Savings, Account
 from wallet.views import CategoryView
 
@@ -679,7 +679,7 @@ def test_income_add_get(user, foreign_accounts):
     url = reverse('for_income_add', args=[foreign_accounts[0].id])
     response = client.get(url)
     assert response.status_code == 200
-    assert isinstance(response.context['form'], ForIncomeAddForm)
+    assert isinstance(response.context['form'], ForIncomeExpenseAddForm)
 
 
 @pytest.mark.django_db
@@ -716,7 +716,7 @@ def test_expense_add_get(user, foreign_accounts):
     url = reverse('for_expense_add', args=[foreign_accounts[0].id])
     response = client.get(url)
     assert response.status_code == 200
-    assert isinstance(response.context['form'], ForExpenseAddForm)
+    assert isinstance(response.context['form'], ForIncomeExpenseAddForm)
 
 
 @pytest.mark.django_db

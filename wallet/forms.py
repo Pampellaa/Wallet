@@ -149,7 +149,7 @@ class AccountAddForm(forms.ModelForm):
 
 
 
-class ForIncomeAddForm(forms.ModelForm):
+class ForIncomeExpenseAddForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ['amount', 'date', 'category']
@@ -166,31 +166,10 @@ class ForIncomeAddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         categories = kwargs.pop('categories', None)
-        super(ForIncomeAddForm, self).__init__(*args, **kwargs)
+        super(ForIncomeExpenseAddForm, self).__init__(*args, **kwargs)
         if categories:
             self.fields['category'].queryset = categories
 
-
-class ForExpenseAddForm(forms.ModelForm):
-    class Meta:
-        model = Transaction
-        fields = ['amount', 'date', 'category']
-        widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'amount': forms.NumberInput(attrs={'class': 'form-control'}),
-            'category': forms.Select(attrs={'class': 'form-control'})
-        }
-        labels = {
-            'amount': 'Kwota',
-            'date': 'Data',
-            'category': 'Kategoria'
-        }
-
-    def __init__(self, *args, **kwargs):
-        categories = kwargs.pop('categories', None)
-        super(ForExpenseAddForm, self).__init__(*args, **kwargs)
-        if categories:
-            self.fields['category'].queryset = categories
 
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')

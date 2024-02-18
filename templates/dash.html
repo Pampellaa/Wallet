@@ -70,7 +70,7 @@
                             <h5>Ostatnie operacje na kontach (10 ostatnich):</h5>
                             {% for transaction in transactionsEXC %}
                                 <li>
-                                    <span>{{ transaction.amount }} {{ transaction.currency }} - ({{ transaction.change_in_PLN }} PLN) - Wymiana</span>
+                                    <span> - {{ transaction.amount }} {{ transaction.currency }}  ( + {{ transaction.change_in_PLN }} PLN) - Wymiana</span>
                                     <span>{{ transaction.date }}</span>
                                 </li>
                             {% endfor %}

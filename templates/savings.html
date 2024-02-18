@@ -10,14 +10,16 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="saving-details">
                             <h4>
-                                <div>{{ saving.name }}</div>
-                                <div>
-                                    <a href="{% url 'saving_edit' saving.id %}" style="color: blue; font-size: 17px;">Edytuj</a>
-                                    <form method="post" action="{% url 'savings_delete' saving.id %}" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn" style="color: orangered; text-decoration: underline;">Usuń cel</button>
-                                    </form>
+                                <div>{{ saving.name }}
+                                    <span class="float-end">
+                                        <a href="{% url 'saving_edit' saving.id %}" class="btn btn-sm btn-outline-primary me-2">Edytuj</a>
+                                        <form method="post" action="{% url 'savings_delete' saving.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
+                                        </form>
+                                    </span>
                                 </div>
+                                
                             </h4>
 
 

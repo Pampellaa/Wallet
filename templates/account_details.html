@@ -46,7 +46,13 @@
                 <li class="list-group-item">
                     <span class="fw-bold">{{ transaction.amount }} {{ account.currency.code }}</span>
                     <span>{{ transaction.transaction_type }}</span>
-                    <span class="float-end">{{ transaction.date }}</span>
+                    <span class="float-end">{{ transaction.date }}
+                        <a href="{% url 'transaction_edit' transaction.id %}" class="btn btn-sm btn-outline-primary me-2">Edytuj</a>
+                        <form method="post" action="{% url 'transaction_delete' transaction.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
+                        </form>
+                    </span>
                 </li>
             {% endfor %}
         </ul>

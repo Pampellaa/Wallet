@@ -22,8 +22,17 @@
                 <ul class="list-group">
                     {% for income in incomes %}
                         <li class="list-group-item">
-                            <span style="color: blueviolet;">{{ income.amount }} zł - {{ income.category.name }}</span>
-                            <span class="float-end"> {{ income.date }}</span>
+                            <span style="color: blueviolet;">
+                                {{ income.amount }} zł - {{ income.category.name }}
+                            </span>
+                            <span class="float-end">
+                                {{ income.date }}  
+                                <a href="{% url 'income_edit' income.id %}" class="btn btn-sm btn-outline-primary me-2">Edytuj</a>
+                                <form method="post" action="{% url 'income_delete' income.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
+                                </form>
+                            </span>
                         </li>
                     {% endfor %}
                 </ul>

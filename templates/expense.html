@@ -23,7 +23,14 @@
                     {% for expense in expenses %}
                         <li class="list-group-item">
                             <span style="color: orangered;">{{ expense.amount }} zł - {{ expense.category.name }}</span>
-                            <span class="float-end"> {{ expense.date }}</span>
+                            <span class="float-end">
+                                {{ expense.date }}  
+                                <a href="{% url 'expense_edit' expense.id %}" class="btn btn-sm btn-outline-primary me-2">Edytuj</a>
+                                <form method="post" action="{% url 'expense_delete' expense.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
+                                </form>
+                            </span>
                         </li>
                     {% endfor %}
                 </ul>

@@ -8,7 +8,7 @@ from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from wallet.forms import LoginForm, RegisterForm, IncomeExpenseAddForm, CategoryAddForm, \
-    SavingsAddForm, AccountAddForm, ForIncomeAddForm, ForExpenseAddForm, CurrencySearchform, \
+    SavingsAddForm, AccountAddForm, ForIncomeExpenseAddForm, CurrencySearchform, \
     IncomeExpenseFilterForm
 from wallet.models import Income, Expense, Category, Savings, Transaction, Account, Currency
 
@@ -57,6 +57,7 @@ class DashboardView(LoginRequiredMixin, View):
         for transaction in transactionsEXC:
             exchange_rate = transaction.currency.exchange_rate
             transaction.change_in_PLN = round(transaction.amount * exchange_rate, 2)
+
 
         return render(request, 'dash.html',
                       {'sum_expenses': sum_expenses, 'sum_income': sum_income, 'together': together,
@@ -147,9 +148,30 @@ class IncomeView(LoginRequiredMixin, View):
             if incomes.exists():
                 total_income = round(incomes.aggregate(Sum('amount'))['amount__sum'], 2)
 
-            return render(request, 'income.html',  {'incomes': incomes, 'total_income': total_income, 'form2': form2})
+            return render(request, 'income.html', {'incomes': incomes, 'total_income': total_income, 'form2': form2})
         return render(request, 'add_form.html', {'form2': form2})
 
+class IncomeEditView(LoginRequiredMixin, View):
+    def get(self, request, income_id):
+        income = Income.objects.get(user=request.user, id=income_id)
+        form = IncomeExpenseAddForm(instance=income)
+        return render(request, 'add_form.html', {'form': form})
+
+    def post(self, request, income_id):
+        user = request.user
+        income = Income.objects.get(user=user, id=income_id)
+        form = IncomeExpenseAddForm(request.POST, instance=income)
+        if form.is_valid():
+            form.save()
+            return redirect('income')
+        return render(request, 'add_form.html', {'form': form})
+
+
+class IncomeDeleteView(LoginRequiredMixin, View):
+    def post(self, request, income_id):
+        income = Income.objects.get(id=income_id)
+        income.delete()
+        return redirect('income')
 
 class IncomeAddView(LoginRequiredMixin, View):
     def get(self, request):
@@ -168,14 +190,6 @@ class IncomeAddView(LoginRequiredMixin, View):
             date = form.cleaned_data['date']
             description = form.cleaned_data['description']
             category = form.cleaned_data['category']
-            Transaction.objects.create(
-                user=user,
-                amount=amount,
-                date=date,
-                description=description,
-                category=category,
-                transaction_type='Income',
-            )
             Income.objects.create(
                 user=user,
                 amount=amount,
@@ -226,8 +240,32 @@ class ExpenseView(LoginRequiredMixin, View):
             if expenses.exists():
                 total_expense = expenses.aggregate(Sum('amount'))['amount__sum']
 
-            return render(request, 'expense.html', {'expenses': expenses, 'total_expense': total_expense, 'form2': form2})
+            return render(request, 'expense.html',
+                          {'expenses': expenses, 'total_expense': total_expense, 'form2': form2})
         return render(request, 'add_form.html', {'form2': form2})
+
+
+class ExpenseEditView(LoginRequiredMixin, View):
+    def get(self, request, expense_id):
+        expense = Expense.objects.get(user=request.user, id=expense_id)
+        form = IncomeExpenseAddForm(instance=expense)
+        return render(request, 'add_form.html', {'form': form})
+
+    def post(self, request, expense_id):
+        user = request.user
+        expense = Expense.objects.get(user=user, id=expense_id)
+        form = IncomeExpenseAddForm(request.POST, instance=expense)
+        if form.is_valid():
+            form.save()
+            return redirect('expense')
+        return render(request, 'add_form.html', {'form': form})
+
+
+class ExpenseDeleteView(LoginRequiredMixin, View):
+    def post(self, request, expense_id):
+        expense = Expense.objects.get(id=expense_id)
+        expense.delete()
+        return redirect('expense')
 
 
 class ExpenseAddView(LoginRequiredMixin, View):
@@ -247,14 +285,6 @@ class ExpenseAddView(LoginRequiredMixin, View):
             date = form.cleaned_data['date']
             description = form.cleaned_data['description']
             category = form.cleaned_data['category']
-            Transaction.objects.create(
-                user=user,
-                amount=amount,
-                date=date,
-                description=description,
-                category=category,
-                transaction_type='Expense',
-            )
             Expense.objects.create(
                 user=user,
                 amount=amount,
@@ -335,6 +365,7 @@ class SavingsView(LoginRequiredMixin, View):
         savings = Savings.objects.filter(user=request.user)
         return render(request, 'savings.html', {'savings': savings})
 
+
 # saving sprawia że dane z obiektu są wpisane w pola formularza a po zatwierdzeniu zastosowane beda zmiany do tego konkretnego elementu
 class SavingsEditView(LoginRequiredMixin, View):
     def get(self, request, saving_id):
@@ -407,6 +438,33 @@ class AccountsView(LoginRequiredMixin, View):
         accounts = Account.objects.filter(user=request.user)
         return render(request, 'accounts.html', {'accounts': accounts})
 
+class AccountDetailsView(LoginRequiredMixin, View):
+    def get(self, request, account_id):
+        account = get_object_or_404(Account, id=account_id, user=request.user)
+        transactions = Transaction.objects.filter(user=request.user, currency=account.currency)
+        return render(request, 'account_details.html', {'account': account, 'transactions': transactions})
+
+class TransactionEditView(LoginRequiredMixin, View):
+    def get(self, request, transaction_id):
+        transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
+        form = ForIncomeExpenseAddForm(instance=transaction)
+        return render(request, 'add_form.html', {'form': form, 'transaction': transaction})
+
+    def post(self, request, transaction_id):
+        transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
+        form = ForIncomeExpenseAddForm(request.POST, instance=transaction)
+        if form.is_valid():
+            form.save()
+            return redirect('account_details', account_id=transaction.currency.account_set.first().id)
+        return render(request, 'add_form.html', {'form': form, 'transaction': transaction})
+
+class TransactionDeleteView(LoginRequiredMixin, View):
+    def post(self, request, transaction_id):
+        transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
+        account_id = transaction.currency.account_set.first().id
+        transaction.delete()
+        return redirect('account_details', account_id=account_id)
+
 
 class AccountAddView(LoginRequiredMixin, View):
     def get(self, request):
@@ -441,17 +499,18 @@ class AccountDetailsView(LoginRequiredMixin, View):
         return render(request, 'account_details.html', {"account": account, 'transactions': transactions})
 
 
+
 class ForIncomeView(LoginRequiredMixin, View):
     def get(self, request, account_id):
         user = request.user
         built_in_categories = Category.objects.filter(is_built=True)
         user_categories = Category.objects.filter(user=user, is_built=False)
         all_categories = built_in_categories | user_categories
-        form = ForIncomeAddForm(categories=all_categories)
+        form = ForIncomeExpenseAddForm(categories=all_categories)
         return render(request, 'add_form.html', {'form': form})
 
     def post(self, request, account_id):
-        form = ForIncomeAddForm(request.POST, categories=Category.objects.all())
+        form = ForIncomeExpenseAddForm(request.POST, categories=Category.objects.all())
         if form.is_valid():
             user = request.user
             new_amount = form.cleaned_data['amount']
@@ -478,11 +537,11 @@ class ForExpenseView(LoginRequiredMixin, View):
         built_in_categories = Category.objects.filter(is_built=True)
         user_categories = Category.objects.filter(user=user, is_built=False)
         all_categories = built_in_categories | user_categories
-        form = ForExpenseAddForm(categories=all_categories)
+        form = ForIncomeExpenseAddForm(categories=all_categories)
         return render(request, 'add_form.html', {'form': form})
 
     def post(self, request, account_id):
-        form = ForExpenseAddForm(request.POST, categories=Category.objects.all())
+        form = ForIncomeExpenseAddForm(request.POST, categories=Category.objects.all())
         if form.is_valid():
             user = request.user
             new_amount = form.cleaned_data['amount']

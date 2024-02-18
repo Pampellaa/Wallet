@@ -22,8 +22,30 @@ class Expense(models.Model):
     date = models.DateField()
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
+    transaction = models.OneToOneField('Transaction', on_delete=models.CASCADE, related_name='expense', null=True, blank=True)
 
-    # currency = models.ForeignKey('Currency', on_delete=models.CASCADE, null=True, blank=True)
+    def save(self, *args, **kwargs):
+        if not self.transaction:
+            default_currency = Currency.objects.get(code='PLN')
+            transaction = Transaction.objects.create(
+                user=self.user,
+                amount=self.amount,
+                date=self.date,
+                description=self.description,
+                category=self.category,
+                transaction_type='Expense',
+                currency=default_currency
+            )
+            self.transaction = transaction
+        else:
+            self.transaction.amount = self.amount
+            self.transaction.date = self.date
+            self.transaction.description = self.description
+            self.transaction.category = self.category
+            self.transaction.save()
+
+        super(Expense, self).save(*args, **kwargs)
+
     def transaction_type(self):
         return 'Expense'
 
@@ -34,6 +56,35 @@ class Income(models.Model):
     date = models.DateField()
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
+    transaction = models.OneToOneField('Transaction', on_delete=models.CASCADE, related_name='income', null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.transaction:
+            default_currency = Currency.objects.get(code='PLN')
+            transaction = Transaction.objects.create(
+                user=self.user,
+                amount=self.amount,
+                date=self.date,
+                description=self.description,
+                category=self.category,
+                transaction_type='Income',
+                currency=default_currency
+            )
+            self.transaction = transaction
+        else:
+            self.transaction.amount = self.amount
+            self.transaction.date = self.date
+            self.transaction.description = self.description
+            self.transaction.category = self.category
+            self.transaction.save()
+
+        super(Income, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.transaction:
+            self.transaction.delete()
+
+        super(Income, self).delete(*args, **kwargs)
 
     def transaction_type(self):
         return 'Income'

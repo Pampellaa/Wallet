@@ -9,7 +9,6 @@
                 <th><h3>Kategorie główne:</h3></th>
                 <th>Wydatki</th>
                 <th>Przychody</th>
-                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -30,7 +29,6 @@
                 <th><h3>Moje kategorie:</h3></th>
                 <th>Wydatki</th>
                 <th>Przychody</th>
-                <th>Akcje</th>
             </tr>
         </thead>
         <tbody>
@@ -40,7 +38,7 @@
                     <td>{{ stat.total_expense }} {{ stat.category.currency.code }}</td>
                     <td>{{ stat.total_income }} {{ stat.category.currency.code }}</td>
                     <td>
-                        <a href="{% url 'category_delete' stat.category.id %}" class="btn btn-success">Usuń</a>
+                        <a href="{% url 'category_delete' stat.category.id %}" class="btn btn-sm btn-outline-danger">Usuń</a>
                     </td>
                 </tr>
             {% endfor %}
