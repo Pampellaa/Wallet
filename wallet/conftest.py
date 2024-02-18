@@ -12,7 +12,7 @@ def user():
 
 
 @pytest.fixture
-def incomes(user):
+def incomes(user, zloty):
     incomes = [
         Income.objects.create(amount=50, user=user, date='2024-08-01'),
         Income.objects.create(amount=100, user=user, date='2024-08-02'),
@@ -31,7 +31,7 @@ def post_data(incomes):
 
 
 @pytest.fixture
-def expenses(user):
+def expenses(user, zloty):
     expenses = [
         Expense.objects.create(amount=50, user=user, date='2024-08-01'),
         Expense.objects.create(amount=100, user=user, date='2024-08-02'),
