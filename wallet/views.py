@@ -11,6 +11,8 @@ from wallet.forms import LoginForm, RegisterForm, IncomeExpenseAddForm, Category
     SavingsAddForm, AccountAddForm, ForIncomeExpenseAddForm, CurrencySearchform, \
     IncomeExpenseFilterForm
 from wallet.models import Income, Expense, Category, Savings, Transaction, Account, Currency
+from wallet.tasks import update_exchange_rates
+from ProjectKoncowy import celery_app
 
 
 class IndexView(View):
@@ -421,16 +423,16 @@ class AddMoneyToSavingsView(LoginRequiredMixin, View):
                       {'error_message': error_message, 'savings': savings_list, 'invalid_saving_id': saving_id})
 
 
-class ForeignCurrenciesView(LoginRequiredMixin, View):
-    def get(self, request):
-        # pobiera parametr 'sort_order' z parametrów żądania GET, jeśli nie istnieje, używana jest domyślna wartość code
-        sort_order = request.GET.get('sort_order', 'code')
-        currencies = Currency.objects.all().order_by(sort_order)
-        form = CurrencySearchform(request.GET)
-        if form.is_valid():
-            name = form.cleaned_data.get('name', '')
-            currencies = currencies.filter(name__icontains=name)
-        return render(request, 'currency.html', {'currencies': currencies, 'sort_order': sort_order, 'form': form})
+# class ForeignCurrenciesView(LoginRequiredMixin, View):
+#     def get(self, request):
+#         # pobiera parametr 'sort_order' z parametrów żądania GET, jeśli nie istnieje, używana jest domyślna wartość code
+#         sort_order = request.GET.get('sort_order', 'code')
+#         currencies = Currency.objects.all().order_by(sort_order)
+#         form = CurrencySearchform(request.GET)
+#         if form.is_valid():
+#             name = form.cleaned_data.get('name', '')
+#             currencies = currencies.filter(name__icontains=name)
+#         return render(request, 'currency.html', {'currencies': currencies, 'sort_order': sort_order, 'form': form})
 
 
 class AccountsView(LoginRequiredMixin, View):
@@ -581,3 +583,18 @@ class ChangeToPLNView(LoginRequiredMixin, View):
         account.balance -= int(amount)
         account.save()
         return redirect('account_details', account_id)
+
+class CurrenciesView(LoginRequiredMixin, View):
+    template_name = 'currencies.html'
+
+    def get(self, request, *args, **kwargs):
+        update_exchange_rates.delay()
+
+        sort_order = request.GET.get('sort_order', 'code')
+        currencies = Currency.objects.all().order_by(sort_order)
+        form = CurrencySearchform(request.GET)
+        if form.is_valid():
+            name = form.cleaned_data.get('name', '')
+            currencies = currencies.filter(name__icontains=name)
+        context = {'currencies': currencies, 'sort_order': sort_order, 'form': form}
+        return render(request, self.template_name, context)

@@ -1,0 +1,37 @@
+{% extends 'dash.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Kursy walut</h2>
+
+        <form>
+            <label for="sort_order">Kolejność sortowania:</label>
+            <select name="sort_order">
+                <option value="code">Kod</option>
+                <option value="name">Nazwa</option>
+                <option value="exchange_rate">Kurs</option>
+            </select>
+            <button type="submit">Zmień kolejność</button>
+             <label for="name">Wyszukaj według nazwy:</label>
+            <input type="text" name="name" id="name" value="{{ form.cleaned_data.name }}">
+            <button type="submit">Wyszukaj</button>
+        </form>
+            <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Exchange Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for currency in currencies %}
+                    <tr>
+                        <td>{{ currency.code }}</td>
+                        <td>{{ currency.name }}</td>
+                        <td>{{ currency.exchange_rate }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+    </table>
+{% endblock %}
